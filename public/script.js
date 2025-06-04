@@ -406,6 +406,22 @@ socket.on("updateRoomList", (rooms) => {
       availableRoomsList.appendChild(li);
     });
   }
+  availableRoomsList.addEventListener("click", (event) => {
+    // 确保点击的是带有 'joinable-room' 类的列表项
+    const clickedLi = event.target.closest("li.joinable-room");
+    if (clickedLi) {
+      const roomId = clickedLi.dataset.roomId; // 从数据属性中获取房间 ID
+      const playerName = playerNameInput.value.trim();
+
+      if (playerName) {
+        socket.emit("createOrJoinRoom", { roomId, playerName }); // 使用现有事件加入
+        roomMessage.textContent = `正在加入房间 ${roomId}...`;
+        disableRoomSetupControls(true); // 连接时禁用控件
+      } else {
+        roomMessage.textContent = "请输入一个昵称才能加入房间！";
+      }
+    }
+  });
 });
 
 // 玩家成功加入（或创建并自动加入）房间时
