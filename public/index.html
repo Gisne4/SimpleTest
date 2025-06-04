@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OX퀴즈</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>OX퀴즈</h1>
+
+      <div id="room-setup" class="screen">
+        <input type="text" id="playerNameInput" placeholder="닉네임이요~" />
+        <button id="createRoomBtn">방파기</button>
+
+        <div class="room-list-container">
+          <h2>빈방들</h2>
+          <ul id="availableRoomsList">
+            <li>로딩중...</li>
+          </ul>
+        </div>
+        <p id="roomMessage"></p>
+
+        <div class="question-admin-section" style="display: none">
+          <button id="toggleQuestionAdminBtn" class="secondary-btn">
+            管理题目
+          </button>
+          <div id="questionAdminForm" class="hidden">
+            <h3>添加新题目</h3>
+            <input
+              type="text"
+              id="newQuestionText"
+              placeholder="输入问题内容"
+            />
+            <select id="newQuestionAnswer">
+              <option value="">选择答案</option>
+              <option value="O">O</option>
+              <option value="X">X</option>
+            </select>
+            <input
+              type="text"
+              id="newQuestionExplanation"
+              placeholder="输入答案说明 (可选)"
+            />
+            <button id="submitNewQuestionBtn">添加题目</button>
+            <p id="questionAdminMessage"></p>
+
+            <hr />
+            <h3>阅览和删除题目</h3>
+            <button id="refreshQuestionsBtn" class="secondary-btn">
+              刷新题目列表
+            </button>
+            <ul id="currentQuestionsList">
+              <li>点击“刷新题目列表”查看。</li>
+            </ul>
+            <p id="questionListMessage"></p>
+          </div>
+        </div>
+      </div>
+
+      <div id="game-lobby" class="screen hidden">
+        <h2 id="lobbyRoomIdDisplay">房间ID: -</h2>
+        <div id="playersList"></div>
+        <button id="startGameBtn">开始游戏</button>
+        <p id="lobbyMessage"></p>
+      </div>
+
+      <div id="game-active" class="screen hidden">
+        <h3 id="question-counter">问题 ?/?</h3>
+        <p id="questionText"></p>
+        <div id="timer-bar-container">
+          <div id="timer-bar"></div>
+        </div>
+        <div class="answer-buttons">
+          <button id="answerO">O</button>
+          <button id="answerX">X</button>
+        </div>
+        <p id="feedbackMessage"></p>
+        <p id="correctAnswerDisplay" class="answer-info-display"></p>
+        <p id="answerExplanationDisplay" class="answer-info-display"></p>
+      </div>
+
+      <div id="game-results" class="screen hidden">
+        <h2>游戏结束！</h2>
+        <h3>最终分数：</h3>
+        <div id="finalScores"></div>
+        <button id="returnToRoomBtn">返回房间大厅</button>
+        <button id="leaveGameBtn">离开游戏</button>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/script.js"></script>
+  </body>
+</html>

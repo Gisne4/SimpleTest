@@ -1,0 +1,422 @@
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; /* 更改字体 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  background: linear-gradient(135deg, #6dd5ed, #2193b0); /* 渐变背景 */
+  color: #333;
+}
+
+.container {
+  background-color: rgba(255, 255, 255, 0.95); /* 半透明背景 */
+  padding: 40px; /* 增加内边距 */
+  border-radius: 15px; /* 更圆润的边角 */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* 更深的阴影 */
+  text-align: center;
+  width: 90%;
+  max-width: 650px; /* 增加最大宽度 */
+  transform: translateY(0);
+  transition: transform 0.5s ease-out, opacity 0.5s ease-out; /* 屏幕切换动画 */
+}
+
+.screen.hidden {
+  display: none;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+h1,
+h2,
+h3 {
+  color: #007bff; /* 主题蓝色 */
+  margin-bottom: 20px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+input[type="text"] {
+  padding: 12px 15px; /* 增加内边距 */
+  margin-bottom: 18px;
+  border: 1px solid #cce;
+  border-radius: 8px; /* 圆润边角 */
+  width: calc(100% - 30px); /* 适应内边距 */
+  box-sizing: border-box;
+  font-size: 1.1em;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input[type="text"]:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.2);
+  outline: none;
+}
+
+button {
+  background-color: #007bff;
+  color: white;
+  padding: 12px 25px; /* 增加内边距 */
+  border: none;
+  border-radius: 8px; /* 圆润边角 */
+  cursor: pointer;
+  font-size: 1.1em;
+  margin: 8px; /* 增加按钮间距 */
+  transition: background-color 0.3s ease, transform 0.2s ease,
+    box-shadow 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+}
+
+button:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px); /* 鼠标悬停上浮 */
+  box-shadow: 0 6px 15px rgba(0, 123, 255, 0.4);
+}
+
+button:active {
+  transform: translateY(0); /* 鼠标点击下沉 */
+  box-shadow: 0 2px 5px rgba(0, 123, 255, 0.2);
+}
+
+button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.answer-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px; /* 按钮间距 */
+  margin-top: 30px;
+}
+
+.answer-buttons button {
+  width: 120px; /* 按钮大小 */
+  height: 70px;
+  font-size: 2.2em; /* 字号更大 */
+  font-weight: bold;
+  border: 2px solid transparent; /* 边框 */
+  transition: background-color 0.3s ease, transform 0.2s ease,
+    box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.answer-buttons button#answerO {
+  background-color: #28a745; /* O 按钮绿色 */
+  box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+}
+.answer-buttons button#answerO:hover {
+  background-color: #218838;
+  box-shadow: 0 6px 15px rgba(40, 167, 69, 0.4);
+}
+.answer-buttons button#answerX {
+  background-color: #dc3545; /* X 按钮红色 */
+  box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+}
+.answer-buttons button#answerX:hover {
+  background-color: #c82333;
+  box-shadow: 0 6px 15px rgba(220, 53, 69, 0.4);
+}
+
+#playersList,
+#finalScores {
+  list-style: none;
+  padding: 0;
+  margin: 25px 0;
+  text-align: left;
+  max-height: 250px; /* 限制高度 */
+  overflow-y: auto; /* 自动滚动 */
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+#playersList li,
+#finalScores li {
+  background-color: #eef7ff; /* 浅蓝色背景 */
+  padding: 12px 15px;
+  margin-bottom: 6px; /* 减少间距 */
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.05em;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); /* 小阴影 */
+  transition: transform 0.2s ease;
+}
+#playersList li:last-child,
+#finalScores li:last-child {
+  margin-bottom: 0;
+}
+#playersList li:hover {
+  transform: translateX(5px); /* 鼠标悬停时右移 */
+}
+
+#questionText {
+  font-size: 1.8em; /* 更大的问题字号 */
+  font-weight: bold;
+  color: #333;
+  margin: 30px 0;
+  min-height: 60px; /* 确保高度稳定 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  /* 动画效果 */
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+#questionText.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#feedbackMessage {
+  margin-top: 20px;
+  font-weight: bold;
+  font-size: 1.4em; /* 更大的反馈字号 */
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out, color 0.3s ease;
+}
+
+#feedbackMessage.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#feedbackMessage.correct {
+  color: #28a745;
+}
+
+#feedbackMessage.incorrect {
+  color: #dc3545;
+}
+
+#timer-bar-container {
+  width: 90%; /* 稍窄 */
+  background-color: #e0e0e0;
+  border-radius: 5px;
+  height: 15px; /* 更粗 */
+  margin: 20px auto; /* 居中 */
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2); /* 内阴影 */
+}
+
+#timer-bar {
+  width: 100%;
+  height: 100%;
+  background-color: #28a745;
+  border-radius: 5px; /* 继承父容器的圆角 */
+  transition: width linear; /* 保持线性过渡 */
+}
+
+/* 房主显示 */
+.player-list-host {
+  font-weight: bold;
+  color: #0056b3; /* 房主颜色 */
+}
+/* ... (之前的样式) ... */
+
+.room-list-container {
+  margin-top: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 15px;
+  background-color: #fcfcfc;
+  box-shadow: inset 0 1px 5px rgba(0, 0, 0, 0.05);
+  max-height: 250px; /* 限制高度 */
+  overflow-y: auto; /* 自动滚动 */
+}
+
+.room-list-container h2 {
+  color: #007bff;
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.5em;
+}
+
+#availableRoomsList {
+  list-style: none;
+  padding: 0;
+}
+
+#availableRoomsList li {
+  background-color: #eef7ff;
+  border: 1px solid #d0e8ff;
+  padding: 10px 15px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease,
+    box-shadow 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.1em;
+  font-weight: 500;
+}
+
+#availableRoomsList li:hover {
+  background-color: #dbeeff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.15);
+}
+
+#availableRoomsList li span {
+  font-size: 0.9em;
+  color: #555;
+  background-color: #f0f8ff;
+  padding: 3px 8px;
+  border-radius: 5px;
+}
+.question-admin-section {
+  margin-top: 30px;
+  padding: 20px;
+  border: 1px dashed #cccccc; /* 虚线边框 */
+  border-radius: 10px;
+  background-color: #f8f8f8;
+}
+
+.question-admin-section h3 {
+  color: #4caf50; /* 绿色主题 */
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.question-admin-section input[type="text"],
+.question-admin-section select {
+  width: calc(100% - 20px); /* 适应内边距 */
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-sizing: border-box;
+  font-size: 1em;
+}
+
+.question-admin-section button {
+  margin: 5px;
+  padding: 10px 20px;
+  font-size: 1em;
+}
+
+button.secondary-btn {
+  /* 新增的次要按钮样式 */
+  background-color: #6c757d; /* 灰色 */
+  box-shadow: 0 4px 10px rgba(108, 117, 125, 0.3);
+}
+
+button.secondary-btn:hover {
+  background-color: #5a6268;
+  box-shadow: 0 6px 15px rgba(108, 117, 125, 0.4);
+}
+
+#questionAdminMessage {
+  margin-top: 15px;
+  font-size: 0.95em;
+  color: #333;
+}
+
+#questionAdminMessage.success {
+  color: #28a745; /* 成功信息绿色 */
+  font-weight: bold;
+}
+
+#questionAdminMessage.error {
+  color: #dc3545; /* 错误信息红色 */
+  font-weight: bold;
+}
+.question-admin-section hr {
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 25px 0;
+}
+
+#currentQuestionsList {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+  max-height: 200px; /* 限制高度，可滚动 */
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #fcfcfc;
+}
+
+#currentQuestionsList li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid #eee;
+  font-size: 0.95em;
+  color: #555;
+}
+
+#currentQuestionsList li:last-child {
+  border-bottom: none;
+}
+
+#currentQuestionsList li span {
+  flex-grow: 1; /* 问题文本占据剩余空间 */
+  text-align: left;
+  margin-right: 10px;
+}
+
+#currentQuestionsList .delete-question-btn {
+  background-color: #dc3545; /* 红色删除按钮 */
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.85em;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  flex-shrink: 0; /* 防止按钮被压缩 */
+}
+
+#currentQuestionsList .delete-question-btn:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
+}
+
+#questionListMessage {
+  margin-top: 10px;
+  font-size: 0.9em;
+  color: #333;
+}
+#questionListMessage.success {
+  color: #28a745;
+}
+#questionListMessage.error {
+  color: #dc3545;
+}
+.answer-info-display {
+  margin-top: 15px;
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #4caf50; /* 默认绿色，表示信息 */
+  text-align: center;
+  opacity: 0; /* 默认隐藏 */
+  transform: translateY(10px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.answer-info-display.show {
+  opacity: 1; /* 显示时可见 */
+  transform: translateY(0);
+}
+
+.correct-answer {
+  color: #007bff; /* 正确答案使用蓝色突出显示 */
+}
+
+/* 可以为说明添加更多样式 */
+#answerExplanationDisplay {
+  font-size: 0.95em;
+  color: #666;
+  font-weight: normal;
+  margin-top: 10px;
+}
