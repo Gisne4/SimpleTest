@@ -401,7 +401,7 @@ button.secondary-btn:hover {
   text-align: center;
   opacity: 0; /* 默认隐藏 */
   transform: translateY(10px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition: opacity 0.1s ease, transform 0.1s ease;
 }
 
 .answer-info-display.show {

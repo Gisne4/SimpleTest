@@ -145,7 +145,7 @@ io.on("connection", (socket) => {
   // Player creating a new room
   socket.on("createOnlyRoom", ({ playerName }) => {
     if (!playerName || playerName.trim() === "") {
-      socket.emit("message", "请输入一个有效的昵称！");
+      socket.emit("message", "유효한 닉네임을 입력하세요!");
       return;
     }
 
@@ -159,7 +159,7 @@ io.on("connection", (socket) => {
         io.to(oldRoomId).emit("updatePlayers", oldRoom.players);
         io.to(oldRoomId).emit(
           "message",
-          `${playerName} 离开了房间 ${oldRoomId}。`
+          `${playerName} 방을 떠났습니다 ${oldRoomId}。`
         );
         console.log(
           `Player ${playerName} left old room ${oldRoomId} to create a new one.`
@@ -204,7 +204,7 @@ io.on("connection", (socket) => {
   // Player joining an existing room or creating if not found
   socket.on("createOrJoinRoom", ({ roomId, playerName }) => {
     if (!playerName || playerName.trim() === "") {
-      socket.emit("message", "请输入一个有效的昵称！");
+      socket.emit("message", "유효한 닉네임을 입력하세요");
       return;
     }
 
@@ -218,7 +218,7 @@ io.on("connection", (socket) => {
         io.to(oldRoomId).emit("updatePlayers", oldRoom.players);
         io.to(oldRoomId).emit(
           "message",
-          `${playerName} 离开了房间 ${oldRoomId}。`
+          `${playerName}가 ${oldRoomId}방을 떠나셨습니다。`
         );
         console.log(`Player ${playerName} left old room ${oldRoomId}.`);
         if (Object.keys(oldRoom.players).length === 0 && !oldRoom.gameStarted) {
@@ -236,7 +236,7 @@ io.on("connection", (socket) => {
       room.gameStarted ||
       Object.keys(room.players).length >= MAX_PLAYERS_PER_ROOM
     ) {
-      socket.emit("message", "房间不存在，已开始游戏或已满！");
+      socket.emit("message", "방이 존재하지않거나, 이미 시작하였습니다");
       io.emit("updateRoomList", getAvailableRooms()); // Ensure client has updated list
       return;
     }
@@ -249,7 +249,10 @@ io.on("connection", (socket) => {
     const isHost = room.hostId === socket.id;
     socket.emit("roomJoined", { roomId: roomId, isHost: isHost });
     io.to(roomId).emit("updatePlayers", room.players);
-    io.to(roomId).emit("message", `${playerName} 加入了房间 ${roomId}。`);
+    io.to(roomId).emit(
+      "message",
+      `${playerName} 가 입장하셨습니다 ${roomId}。`
+    );
     console.log(`Player ${playerName} (${socket.id}) joined room ${roomId}.`);
     io.emit("updateRoomList", getAvailableRooms());
   });
@@ -260,7 +263,7 @@ io.on("connection", (socket) => {
     const room = rooms[roomId];
 
     if (!room || socket.id !== room.hostId || room.gameStarted) {
-      socket.emit("message", "只有房主才能开始游戏，或者游戏已开始！");
+      socket.emit("message", "방장만이 게임을 시작할수 있습니다");
       return;
     }
 
@@ -268,7 +271,7 @@ io.on("connection", (socket) => {
     try {
       const allQuestions = await Question.find({});
       if (allQuestions.length === 0) {
-        socket.emit("message", "数据库中没有题目，请先添加一些题目！");
+        socket.emit("message", "데이터가 없네요");
         return;
       }
       // Shuffle questions and select a subset if needed, or use all
@@ -278,12 +281,12 @@ io.on("connection", (socket) => {
       room.lastActivity = new Date();
 
       io.to(roomId).emit("gameStart");
-      io.to(roomId).emit("message", "游戏开始！");
+      io.to(roomId).emit("message", "게임시작!");
       io.emit("updateRoomList", getAvailableRooms()); // Update room list (room now unavailable)
       sendNextQuestion(roomId);
     } catch (error) {
       console.error("Error fetching questions for game:", error);
-      socket.emit("message", "启动游戏失败：无法加载题目。");
+      socket.emit("message", "문제를 불러오지 못했습니다");
     }
   });
 
@@ -395,7 +398,7 @@ io.on("connection", (socket) => {
     room.lastActivity = new Date();
 
     io.to(roomId).emit("gameEnd", room.players); // Send final scores
-    io.to(roomId).emit("message", "游戏结束！返回大厅。");
+    io.to(roomId).emit("message", "게임이 종료되었습니다");
     console.log(`Game ended for room ${roomId}`);
 
     // Reset scores for next game in the same room (optional, depending on game flow)
@@ -414,7 +417,7 @@ io.on("connection", (socket) => {
         const playerName = room.players[socket.id].name;
         delete room.players[socket.id];
         io.to(roomId).emit("updatePlayers", room.players); // Update players for others in room
-        io.to(roomId).emit("message", `${playerName} 已离开房间。`);
+        io.to(roomId).emit("message", `${playerName} 방을 떠났습니다`);
         console.log(`Player ${playerName} (${socket.id}) left room ${roomId}.`);
 
         if (Object.keys(room.players).length === 0) {
@@ -429,7 +432,7 @@ io.on("connection", (socket) => {
           const newHostId = Object.keys(room.players)[0];
           if (newHostId) {
             room.hostId = newHostId;
-            io.to(newHostId).emit("message", "你现在是房主！");
+            io.to(newHostId).emit("message", "당신이 방장입니다");
             // Update host status for all players in the room (optional, but good practice)
             io.to(roomId).emit("updatePlayers", room.players); // Re-broadcast to update host styling
           } else {
@@ -443,7 +446,7 @@ io.on("connection", (socket) => {
           if (room.gameStarted) {
             // End game if host leaves mid-game
             endGame(roomId);
-            io.to(roomId).emit("message", "房主离开了，游戏结束。");
+            io.to(roomId).emit("message", "방장이 떠났습니다");
           }
         }
       }

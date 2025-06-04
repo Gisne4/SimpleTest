@@ -87,10 +87,10 @@ createRoomBtn.addEventListener("click", () => {
   const playerName = playerNameInput.value.trim();
   if (playerName) {
     socket.emit("createOnlyRoom", { playerName }); // 发送创建房间的事件
-    roomMessage.textContent = "正在创建房间...";
+    roomMessage.textContent = "방 맹그는중...";
     disableRoomSetupControls(true); // 连接时禁用控件
   } else {
-    roomMessage.textContent = "请输入一个昵称！";
+    roomMessage.textContent = "닉네임 맹그셈";
   }
 });
 
@@ -104,10 +104,10 @@ availableRoomsList.addEventListener("click", (event) => {
 
     if (playerName) {
       socket.emit("createOrJoinRoom", { roomId, playerName }); // 使用现有事件加入
-      roomMessage.textContent = `正在加入房间 ${roomId}...`;
+      roomMessage.textContent = `방에 입장하는중 ${roomId}...`;
       disableRoomSetupControls(true); // 连接时禁用控件
     } else {
-      roomMessage.textContent = "请输入一个昵称才能加入房间！";
+      roomMessage.textContent = "좋은말로 할때 닉네임 적어라";
     }
   }
 });
@@ -116,10 +116,10 @@ availableRoomsList.addEventListener("click", (event) => {
 toggleQuestionAdminBtn.addEventListener("click", () => {
   questionAdminForm.classList.toggle("hidden");
   if (!questionAdminForm.classList.contains("hidden")) {
-    toggleQuestionAdminBtn.textContent = "隐藏题目管理";
+    toggleQuestionAdminBtn.textContent = "관리";
     fetchQuestions(); // 打开时自动刷新题目
   } else {
-    toggleQuestionAdminBtn.textContent = "管理题目";
+    toggleQuestionAdminBtn.textContent = "문제관리";
   }
   // 切换时清除信息，以重新开始
   questionAdminMessage.textContent = "";
@@ -135,16 +135,16 @@ submitNewQuestionBtn.addEventListener("click", async () => {
   const explanation = newQuestionExplanation.value.trim(); // 获取说明
 
   if (!question || !answer) {
-    displayQuestionAdminMessage("问题和答案都不能为空！", "error");
+    displayQuestionAdminMessage("문제랑답 잘 맹글어", "error");
     return;
   }
   if (answer !== "O" && answer !== "X") {
-    displayQuestionAdminMessage("答案必须是 O 或 X！", "error");
+    displayQuestionAdminMessage("답은 O OR X！", "error");
     return;
   }
 
   submitNewQuestionBtn.disabled = true; // 防止重复点击
-  questionAdminMessage.textContent = "正在添加题目...";
+  questionAdminMessage.textContent = "지금추가중...";
   questionAdminMessage.classList.remove("success", "error");
   questionAdminMessage.classList.add("show"); // 确保加载时信息可见
 
@@ -160,7 +160,7 @@ submitNewQuestionBtn.addEventListener("click", async () => {
     const data = await response.json();
 
     if (response.ok) {
-      displayQuestionAdminMessage("题目添加成功！", "success");
+      displayQuestionAdminMessage("추가성공!", "success");
       newQuestionText.value = ""; // 清空表单输入
       newQuestionAnswer.value = ""; // 重置选择
       newQuestionExplanation.value = ""; // 清空说明
@@ -168,14 +168,14 @@ submitNewQuestionBtn.addEventListener("click", async () => {
     } else {
       // 处理服务器端错误（例如，验证失败）
       displayQuestionAdminMessage(
-        `添加失败: ${data.message || "未知错误"}`,
+        `안됨: ${data.message || "잘모르겠음"}`,
         "error"
       );
     }
   } catch (error) {
     // 处理网络错误（例如，服务器宕机）
-    console.error("添加题目失败:", error);
-    displayQuestionAdminMessage("网络或服务器错误，请重试。", "error");
+    console.error("개같히 실패!:", error);
+    displayQuestionAdminMessage("인터넷선 뽑혔냐?", "error");
   } finally {
     submitNewQuestionBtn.disabled = false; // 重新启用按钮
   }
@@ -189,11 +189,11 @@ currentQuestionsList.addEventListener("click", async (event) => {
   const deleteBtn = event.target.closest(".delete-question-btn");
   if (deleteBtn) {
     const questionId = deleteBtn.dataset.questionId;
-    if (!confirm("确定要删除这道题目吗？")) {
+    if (!confirm("지우실?")) {
       return; // 用户取消
     }
 
-    displayQuestionListMessage("正在删除题目...", "");
+    displayQuestionListMessage("OKDK...", "");
     try {
       const response = await fetch(`/api/questions/${questionId}`, {
         method: "DELETE",
@@ -202,17 +202,17 @@ currentQuestionsList.addEventListener("click", async (event) => {
       const data = await response.json();
 
       if (response.ok) {
-        displayQuestionListMessage("题目删除成功！", "success");
+        displayQuestionListMessage("다지움", "success");
         fetchQuestions(); // 删除后刷新列表
       } else {
         displayQuestionListMessage(
-          `删除失败: ${data.message || "未知错误"}`,
+          `아놔: ${data.message || "잘모르겠음"}`,
           "error"
         );
       }
     } catch (error) {
-      console.error("删除题目失败:", error);
-      displayQuestionListMessage("网络或服务器错误，请重试。", "error");
+      console.error("실패!:", error);
+      displayQuestionListMessage("인터넷선 뽑힘", "error");
     }
   }
 });
@@ -259,7 +259,7 @@ function displayQuestionListMessage(message, type) {
  * 从服务器获取并显示题目列表。
  */
 async function fetchQuestions() {
-  currentQuestionsList.innerHTML = "<li>正在加载题目...</li>";
+  currentQuestionsList.innerHTML = "<li>문제를 불러오는중...</li>";
   questionListMessage.textContent = "";
   questionListMessage.classList.remove("success", "error");
 
@@ -270,26 +270,26 @@ async function fetchQuestions() {
     currentQuestionsList.innerHTML = ""; // 清除加载信息
 
     if (questions.length === 0) {
-      currentQuestionsList.innerHTML = "<li>暂无题目，请添加新题目。</li>";
+      currentQuestionsList.innerHTML = "<li>문제가 없으니 문제인거야</li>";
     } else {
       questions.forEach((q) => {
         const li = document.createElement("li");
         // 显示说明，如果存在的话
         const explanationText = q.explanation
-          ? `<br><small style="color: #888;">说明: ${q.explanation}</small>`
+          ? `<br><small style="color: #888;">설명: ${q.explanation}</small>`
           : "";
         li.innerHTML = `
-                    <span>${q.question} (答案: ${q.answer})${explanationText}</span>
-                    <button class="delete-question-btn" data-question-id="${q._id}">删除</button>
+                    <span>${q.question} (답: ${q.answer})${explanationText}</span>
+                    <button class="delete-question-btn" data-question-id="${q._id}">삭제</button>
                 `;
         currentQuestionsList.appendChild(li);
       });
     }
-    displayQuestionListMessage("题目列表已更新。", "success");
+    displayQuestionListMessage("업데이트 완료", "success");
   } catch (error) {
-    console.error("获取题目失败:", error);
-    currentQuestionsList.innerHTML = "<li>加载题目失败。</li>";
-    displayQuestionListMessage("加载题目失败，请检查服务器。", "error");
+    console.error("문제들고 오는데 문재생김:", error);
+    currentQuestionsList.innerHTML = "<li>문제 들고 오는거 실패</li>";
+    displayQuestionListMessage("문제 들고 올려니 빡세군", "error");
   }
 }
 
@@ -306,8 +306,8 @@ answerXBtn.addEventListener("click", () => sendAnswer("X"));
 returnToRoomBtn.addEventListener("click", () => {
   showScreen("game-lobby");
   lobbyMessage.textContent = isHost
-    ? "你是房主，可以开始下一轮游戏。"
-    : "等待房主开始下一轮游戏...";
+    ? "방장 시작해"
+    : "방장이 시작할때까지 ㄱㄷ...";
   startGameBtn.disabled = !isHost; // 如果当前玩家是房主，则启用开始按钮
 });
 
@@ -341,12 +341,12 @@ function disableRoomSetupControls(disable) {
   toggleQuestionAdminBtn.disabled = disable;
   if (disable) {
     questionAdminForm.classList.add("hidden"); // 隐藏表单
-    toggleQuestionAdminBtn.textContent = "管理题目"; // 重置按钮文本
+    toggleQuestionAdminBtn.textContent = "문제 관리"; // 重置按钮文本
     questionAdminMessage.textContent = ""; // 清除信息
     questionAdminMessage.classList.remove("success", "error", "show");
     questionListMessage.textContent = ""; // 清除题目列表信息
     questionListMessage.classList.remove("success", "error");
-    currentQuestionsList.innerHTML = "<li>点击“刷新题目列表”查看。</li>"; // 重置题目列表内容
+    currentQuestionsList.innerHTML = "<li>새로고침</li>"; // 重置题目列表内容
   }
 }
 
@@ -393,15 +393,15 @@ socket.on("updateRoomList", (rooms) => {
   availableRoomsList.innerHTML = ""; // 清空当前列表
   if (rooms.length === 0) {
     availableRoomsList.innerHTML =
-      '<li class="no-room-msg">暂时没有可加入的房间，创建一个吧！</li>';
+      '<li class="no-room-msg">방이 없으면 만들면 되는겨</li>';
   } else {
     rooms.forEach((room) => {
       const li = document.createElement("li");
       li.classList.add("joinable-room"); // 用于标识可点击房间的类
       li.dataset.roomId = room.id; // 存储房间 ID 用于加入
       li.innerHTML = `
-                <span>房间: ${room.id}</span>
-                <span>人数: ${room.playersCount}/${room.maxPlayers}</span>
+                <span>방: ${room.id}</span>
+                <span>인원: ${room.playersCount}/${room.maxPlayers}</span>
             `;
       availableRoomsList.appendChild(li);
     });
@@ -412,12 +412,10 @@ socket.on("updateRoomList", (rooms) => {
 socket.on("roomJoined", (data) => {
   currentRoomId = data.roomId;
   isHost = data.isHost; // 设置当前玩家的主机状态
-  lobbyRoomIdDisplay.textContent = `房间ID: ${currentRoomId}`;
+  lobbyRoomIdDisplay.textContent = `방ID: ${currentRoomId}`;
   showScreen("game-lobby");
   startGameBtn.disabled = !isHost; // 只有主机才能开始游戏
-  lobbyMessage.textContent = isHost
-    ? "你是房主，可以开始游戏。"
-    : "等待房主开始游戏...";
+  lobbyMessage.textContent = isHost ? "너가방장임" : "방장을 기둘리셈...";
 });
 
 // 更新当前房间中的玩家列表
@@ -428,7 +426,7 @@ socket.on("updatePlayers", (players) => {
   const playerIds = Object.keys(players);
 
   if (playerIds.length === 0) {
-    playersList.innerHTML = "<li>房间内没有玩家。</li>";
+    playersList.innerHTML = "<li>방에 플레이어가 없음</li>";
     startGameBtn.disabled = true; // 没有玩家不能开始游戏
     return;
   }
@@ -522,16 +520,16 @@ socket.on("newQuestion", (data) => {
       clearInterval(timerInterval); // 停止计时器
       answerOBtn.disabled = true; // 禁用答案按钮
       answerXBtn.disabled = true;
-      feedbackMessage.textContent = "时间到！"; // 显示“时间到”消息
+      feedbackMessage.textContent = "TIME OUT!"; // 显示“时间到”消息
       feedbackMessage.classList.add("show");
 
       // 时间到时也显示正确答案和说明
       if (data.correct_answer) {
-        correctAnswerDisplay.textContent = `正确答案: ${data.correct_answer}`;
+        correctAnswerDisplay.textContent = `정답: ${data.correct_answer}`;
         correctAnswerDisplay.classList.add("show", "correct-answer");
       }
       if (data.explanation) {
-        answerExplanationDisplay.textContent = `说明: ${data.explanation}`;
+        answerExplanationDisplay.textContent = `설명: ${data.explanation}`;
         answerExplanationDisplay.classList.add("show");
       }
     }
@@ -542,7 +540,7 @@ socket.on("newQuestion", (data) => {
 socket.on("playerAnswered", (data) => {
   if (data.playerId === socket.id) {
     // 只显示当前玩家回答的反馈
-    feedbackMessage.textContent = data.correct ? "回答正确！" : "回答错误！";
+    feedbackMessage.textContent = data.correct ? "어케맞춤?" : "능지보소";
     feedbackMessage.classList.toggle("correct", data.correct); // 应用正确/错误样式
     feedbackMessage.classList.toggle("incorrect", !data.correct);
     feedbackMessage.classList.add("show");
@@ -550,11 +548,11 @@ socket.on("playerAnswered", (data) => {
 
   // 显示正确答案和说明
   if (data.correct_answer) {
-    correctAnswerDisplay.textContent = `正确答案: ${data.correct_answer}`;
+    correctAnswerDisplay.textContent = `정답: ${data.correct_answer}`;
     correctAnswerDisplay.classList.add("show", "correct-answer");
   }
   if (data.explanation) {
-    answerExplanationDisplay.textContent = `说明: ${data.explanation}`;
+    answerExplanationDisplay.textContent = `설명: ${data.explanation}`;
     answerExplanationDisplay.classList.add("show");
   }
 });
