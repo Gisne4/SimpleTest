@@ -458,3 +458,102 @@ button.secondary-btn:hover {
   padding: 20px;
   font-style: italic;
 }
+
+/* Chat Container Styles */
+.chat-container {
+  width: 100%;
+  max-width: 400px; /* Limit chat width */
+  margin: 20px auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  height: 300px; /* Fixed height for chat messages */
+}
+
+.chat-container h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #333;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.chat-messages {
+  flex-grow: 1; /* Allows message area to take available space */
+  border: 1px solid #eee;
+  padding: 10px;
+  margin-bottom: 10px;
+  overflow-y: auto; /* Enable scrolling for messages */
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  display: flex; /* For message alignment */
+  flex-direction: column;
+}
+
+.chat-messages p {
+  margin: 3px 0;
+  padding: 5px 8px;
+  border-radius: 5px;
+  word-wrap: break-word; /* Prevents long words from breaking layout */
+}
+
+.chat-messages .message-other {
+  background-color: #e6e6e6; /* Other player messages */
+  align-self: flex-start; /* Align to left */
+  max-width: 85%; /* Limit width */
+}
+
+.chat-messages .message-self {
+  background-color: #d1e7dd; /* Your messages */
+  align-self: flex-end; /* Align to right */
+  max-width: 85%; /* Limit width */
+}
+
+.chat-messages .message-system {
+  font-style: italic;
+  color: #777;
+  text-align: center;
+  font-size: 0.9em;
+  padding: 5px 0;
+  align-self: center;
+}
+
+.chat-messages span.sender-name {
+  font-weight: bold;
+  color: #007bff; /* Name color */
+  margin-right: 5px;
+}
+
+.chat-input-area {
+  display: flex;
+  margin-top: 10px;
+}
+
+.chat-input-area input[type="text"] {
+  flex-grow: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-right: 5px;
+  font-size: 0.95em;
+}
+
+.chat-input-area button {
+  padding: 8px 15px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.95em;
+  transition: background-color 0.2s;
+}
+
+.chat-input-area button:hover {
+  background-color: #0056b3;
+}

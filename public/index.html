@@ -64,6 +64,14 @@
         <div id="playersList"></div>
         <button id="startGameBtn">게임시작</button>
         <p id="lobbyMessage"></p>
+        <div class="chat-container">
+          <h4>채팅</h4>
+          <div id="chatMessages" class="chat-messages"></div>
+          <div class="chat-input-area">
+            <input type="text" id="chatInput" placeholder="꼽을 줘보세요..." />
+            <button id="chatSendBtn">꼽주기</button>
+          </div>
+        </div>
       </div>
 
       <div id="game-active" class="screen hidden">
@@ -79,6 +87,19 @@
         <p id="feedbackMessage"></p>
         <p id="correctAnswerDisplay" class="answer-info-display"></p>
         <p id="answerExplanationDisplay" class="answer-info-display"></p>
+
+        <div class="chat-container">
+          <h4>채팅</h4>
+          <div id="gameChatMessages" class="chat-messages"></div>
+          <div class="chat-input-area">
+            <input
+              type="text"
+              id="gameChatInput"
+              placeholder="꼽을 주세요..."
+            />
+            <button id="gameChatSendBtn">꼽주기</button>
+          </div>
+        </div>
       </div>
 
       <div id="game-results" class="screen hidden">

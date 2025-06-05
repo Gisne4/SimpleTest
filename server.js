@@ -193,7 +193,7 @@ io.on("connection", (socket) => {
     io.to(newRoomId).emit("updatePlayers", rooms[newRoomId].players);
     io.to(newRoomId).emit(
       "message",
-      `${playerName} 创建并加入了房间 ${newRoomId}。`
+      `${playerName} 가 참여했습니다 ${newRoomId}。`
     );
     console.log(
       `New room ${newRoomId} created and joined by ${playerName} (${socket.id}).`
@@ -333,7 +333,7 @@ io.on("connection", (socket) => {
     const player = room?.players[socket.id];
 
     if (!room || !player || !room.gameStarted || player.answered) {
-      socket.emit("message", "你不能回答，可能游戏未开始，或者你已回答过。");
+      socket.emit("message", "쫌만 기둘");
       return;
     }
 
@@ -452,6 +452,27 @@ io.on("connection", (socket) => {
       }
     }
     io.emit("updateRoomList", getAvailableRooms()); // Update room list for all clients
+  });
+  // --- 新增：聊天消息处理 ---
+  socket.on("sendMessage", (message) => {
+    const roomId = socket.data.roomId;
+    const room = rooms[roomId];
+
+    if (!room || !room.players[socket.id]) {
+      // 如果玩家不在房间或数据异常，则不发送消息
+      socket.emit("message", "채팅은 방에 들어가서 해라");
+      return;
+    }
+
+    const senderName = room.players[socket.id].name;
+
+    // 向房间内的所有玩家广播聊天消息
+    io.to(roomId).emit("chatMessage", {
+      senderId: socket.id, // 发送者ID，用于前端判断是自己还是其他人
+      senderName: senderName,
+      message: message,
+    });
+    console.log(`Room ${roomId} - ${senderName}: ${message}`);
   });
 });
 

@@ -51,6 +51,15 @@ const refreshQuestionsBtn = document.getElementById("refreshQuestionsBtn");
 const currentQuestionsList = document.getElementById("currentQuestionsList");
 const questionListMessage = document.getElementById("questionListMessage");
 
+//聊天
+const chatMessages = document.getElementById("chatMessages"); // 适用于大厅
+const chatInput = document.getElementById("chatInput");
+const chatSendBtn = document.getElementById("chatSendBtn");
+
+const gameChatMessages = document.getElementById("gameChatMessages"); // 适用于游戏中
+const gameChatInput = document.getElementById("gameChatInput");
+const gameChatSendBtn = document.getElementById("gameChatSendBtn");
+
 // --- 全局状态 ---
 let currentRoomId = null;
 let isHost = false;
@@ -255,6 +264,77 @@ function displayQuestionListMessage(message, type) {
   }, 3000);
 }
 
+// --- 新增：聊天功能事件监听器 ---
+
+// 大厅聊天发送按钮
+chatSendBtn.addEventListener("click", () => {
+  sendMessage(chatInput);
+});
+
+// 大厅聊天输入框按回车发送
+chatInput.addEventListener("keypress", (event) => {
+  if (event.key === "Enter") {
+    sendMessage(chatInput);
+  }
+});
+
+// 游戏内聊天发送按钮
+gameChatSendBtn.addEventListener("click", () => {
+  sendMessage(gameChatInput);
+});
+
+// 游戏内聊天输入框按回车发送
+gameChatInput.addEventListener("keypress", (event) => {
+  if (event.key === "Enter") {
+    sendMessage(gameChatInput);
+  }
+});
+
+/**
+ * 发送聊天消息到服务器。
+ * @param {HTMLInputElement} inputElement - 聊天输入框元素。
+ */
+function sendMessage(inputElement) {
+  const message = inputElement.value.trim();
+  if (message) {
+    socket.emit("sendMessage", message);
+    inputElement.value = ""; // 清空输入框
+  }
+}
+
+/**
+ * 在聊天显示区域添加消息。
+ * @param {string} senderName - 发送者名称 (或 '系统')。
+ * @param {string} message - 消息内容。
+ * @param {string} type - 消息类型 ('self', 'other', 'system')。
+ */
+function addChatMessage(senderName, message, type) {
+  // 检查当前是哪个聊天框可见并添加到它
+  const currentChatDisplay = gameActiveScreen.classList.contains("show")
+    ? gameChatMessages
+    : chatMessages;
+
+  if (!currentChatDisplay) return; // 如果没有可见的聊天框，则不添加
+
+  const messageElem = document.createElement("p");
+  messageElem.classList.add(`message-${type}`);
+
+  if (type === "self" || type === "other") {
+    const nameSpan = document.createElement("span");
+    nameSpan.classList.add("sender-name");
+    nameSpan.textContent = `${senderName}: `;
+    messageElem.appendChild(nameSpan);
+    messageElem.appendChild(document.createTextNode(message));
+  } else {
+    // System message
+    messageElem.textContent = message;
+  }
+
+  currentChatDisplay.appendChild(messageElem);
+  // 自动滚动到最新消息
+  currentChatDisplay.scrollTop = currentChatDisplay.scrollHeight;
+}
+
 /**
  * 从服务器获取并显示题目列表。
  */
@@ -415,10 +495,10 @@ socket.on("updateRoomList", (rooms) => {
 
       if (playerName) {
         socket.emit("createOrJoinRoom", { roomId, playerName }); // 使用现有事件加入
-        roomMessage.textContent = `正在加入房间 ${roomId}...`;
+        roomMessage.textContent = `지금 들가는중 ${roomId}...`;
         disableRoomSetupControls(true); // 连接时禁用控件
       } else {
-        roomMessage.textContent = "请输入一个昵称才能加入房间！";
+        roomMessage.textContent = "닉네임나 먼저 정햐슈";
       }
     }
   });
@@ -488,7 +568,7 @@ socket.on("gameStart", () => {
 // 收到新题目时
 socket.on("newQuestion", (data) => {
   showScreen("game-active");
-  questionCounter.textContent = `问题 ${data.index + 1}/${data.total}`;
+  questionCounter.textContent = `문제 ${data.index + 1}/${data.total}`;
   questionText.textContent = "";
   feedbackMessage.classList.remove("show");
   answerOBtn.disabled = false;
@@ -588,13 +668,49 @@ socket.on("gameEnd", (finalPlayers) => {
   });
 });
 
+// --- 新增：Socket.IO 聊天消息监听器 ---
+socket.on("chatMessage", (data) => {
+  // data 包含 { senderId, senderName, message }
+  const type = data.senderId === socket.id ? "self" : "other";
+  addChatMessage(data.senderName, data.message, type);
+});
+
+// 可以选择在 'message' 事件中也添加系统消息到聊天框
+socket.on("message", (msg) => {
+  console.log("服务器消息:", msg);
+  // 在适当的屏幕上显示消息 (原逻辑)
+  if (!currentRoomId || roomSetupScreen.classList.contains("show")) {
+    roomMessage.textContent = msg;
+    disableRoomSetupControls(false);
+  } else if (
+    gameLobbyScreen.classList.contains("hidden") &&
+    gameActiveScreen.classList.contains("hidden") &&
+    gameResultsScreen.classList.contains("show")
+  ) {
+    const msgElem = document.createElement("p");
+    msgElem.textContent = msg;
+    msgElem.style.marginTop = "10px";
+    finalScoresDiv.appendChild(msgElem);
+  } else {
+    // 将服务器消息作为系统消息添加到聊天框
+    addChatMessage("시스템", msg, "system");
+    // 同时保留原有的消息显示（如果需要）
+    if (gameLobbyScreen.classList.contains("show")) {
+      lobbyMessage.textContent = msg;
+    } else if (gameActiveScreen.classList.contains("show")) {
+      feedbackMessage.textContent = msg;
+      feedbackMessage.classList.add("show");
+      setTimeout(() => feedbackMessage.classList.remove("show"), 3000);
+    }
+  }
+});
 // 与服务器断开连接时
 socket.on("disconnect", () => {
   console.log("已与服务器断开连接");
   currentRoomId = null; // 重置房间状态
   isHost = false;
   clearInterval(timerInterval); // 停止任何活动的计时器
-  roomMessage.textContent = "你已断开连接，请刷新页面重新加入。";
+  roomMessage.textContent = "새로고침하셈 기술상 분마다 끊김";
   showScreen("room-setup"); // 返回设置屏幕
   disableRoomSetupControls(false);
 });
