@@ -351,32 +351,19 @@ function addChatMessage(senderName, message, type) {
 // --- 新增：鼠标移动事件监听器 (在 game-active 屏幕上) ---
 // 仅在游戏激活屏幕上监听鼠标移动，并进行节流
 gameActiveScreen.addEventListener('mousemove', (event) => {
-  // 鼠标坐标相对于视口
-  const clientX = event.clientX;
-  const clientY = event.clientY;
-
-  // 获取 gameActiveScreen 的边界矩形
-  const rect = gameActiveScreen.getBoundingClientRect();
-
-  // 计算鼠标相对于 gameActiveScreen 容器的偏移量
-  // 确保坐标在容器内，并将其转换为百分比或直接使用像素值
-  // 使用像素值通常更简单，但在响应式布局中可能需要调整
-  const offsetX = clientX - rect.left;
-  const offsetY = clientY - rect.top;
-
-  // 确保坐标在容器范围内
-  const relativeX = Math.max(0, Math.min(offsetX, rect.width));
-  const relativeY = Math.max(0, Math.min(offsetY, rect.height));
+  const clientX = event.clientX; // 相对于视口的X坐标
+  const clientY = event.clientY; // 相对于视口的Y坐标
 
   // 使用 requestAnimationFrame 节流，确保平滑更新
   if (mouseMoveAnimationFrameRequest === null) {
       mouseMoveAnimationFrameRequest = requestAnimationFrame(() => {
           mouseMoveAnimationFrameRequest = null;
           // 只有当鼠标实际移动且达到发送间隔时才发送
-          if (Date.now() - lastSentCursorTime > CURSOR_EMIT_INTERVAL || relativeX !== lastMouseX || relativeY !== lastMouseY) {
-              lastMouseX = relativeX;
-              lastMouseY = relativeY;
-              socket.emit('cursorMove', { x: relativeX, y: relativeY });
+          if (Date.now() - lastSentCursorTime > CURSOR_EMIT_INTERVAL || clientX !== lastMouseX || clientY !== lastMouseY) {
+              lastMouseX = clientX;
+              lastMouseY = clientY;
+              // 直接发送 clientX 和 clientY，因为 playerCursorsContainer 使用 fixed 定位并覆盖整个视口
+              socket.emit('cursorMove', { x: clientX, y: clientY });
               lastSentCursorTime = Date.now();
           }
       });

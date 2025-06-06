@@ -558,28 +558,29 @@ button.secondary-btn:hover {
   background-color: #0056b3;
 }
 
-/* 鼠标光标容器 - 确保它覆盖整个游戏区域 */
+/* public/style.css */
+
+/* 鼠标光标容器 */
 .player-cursors-container {
-  position: absolute; /* 相对于父级定位，如果父级也是相对定位 */
+  position: fixed; /* 关键修改：改为固定定位，相对于视口 */
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none; /* 允许鼠标事件穿透此层，不阻挡下方按钮和输入框 */
-  z-index: 10; /* 确保光标在其他元素之上，但不要太高，以免遮挡重要UI */
-
+  width: 100vw;   /* 宽度占满整个视口 */
+  height: 100vh;  /* 高度占满整个视口 */
+  pointer-events: none; /* 允许鼠标事件穿透此层 */
+  z-index: 9999; /* 确保光标在最顶层，除非有其他 z-index 更高的元素 */
+  overflow: hidden; /* 防止光标在容器外显示 */
 }
 
-/* 单个玩家光标样式 */
+/* 其他光标样式保持不变 */
 .player-cursor {
   position: absolute;
-  transform: translate(-50%, -50%); /* 将光标的中心点定位在鼠标坐标处 */
-  pointer-events: none; /* 允许鼠标事件穿透此层 */
-  z-index: 11; /* 比容器高一点 */
-  transition: transform 0.05s linear; /* 平滑光标移动，根据实际效果调整速度 */
-  /* background-color: rgba(0, 0, 0, 0.2); /* 用于调试定位 */
-  /* border-radius: 50%; width: 20px; height: 20px; */
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 1; /* 相对于父级 player-cursors-container 的 z-index */
+  transition: transform 0.05s linear;
 }
+
 
 .player-cursor .cursor-icon {
   width: 24px; /* 光标图标大小 */
