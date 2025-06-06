@@ -567,7 +567,7 @@ button.secondary-btn:hover {
   height: 100%;
   pointer-events: none; /* 允许鼠标事件穿透此层，不阻挡下方按钮和输入框 */
   z-index: 10; /* 确保光标在其他元素之上，但不要太高，以免遮挡重要UI */
-  overflow: hidden; /* 防止光标在容器外显示 */
+
 }
 
 /* 单个玩家光标样式 */
