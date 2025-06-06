@@ -162,15 +162,8 @@ button:disabled {
   align-items: center;
   justify-content: center;
   padding: 0 10px;
-  /* 动画效果 */
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
 }
-#questionText.show {
-  opacity: 1;
-  transform: translateY(0);
-}
+
 
 #feedbackMessage {
   margin-top: 20px;
