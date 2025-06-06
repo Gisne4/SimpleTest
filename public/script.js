@@ -60,6 +60,18 @@ const gameChatMessages = document.getElementById("gameChatMessages"); // 适用�
 const gameChatInput = document.getElementById("gameChatInput");
 const gameChatSendBtn = document.getElementById("gameChatSendBtn");
 
+// --- 鼠标光标元素引用 ---
+const playerCursorsContainer = document.getElementById('playerCursors');
+const playerCursorElements = new Map(); // Map<socketId, { element: HTMLElement, color: string }>
+const playerColors = new Map(); // Map<socketId, string> 存储玩家的随机颜色
+
+// 用于节流鼠标移动事件
+let lastMouseX = 0;
+let lastMouseY = 0;
+let mouseMoveAnimationFrameRequest = null;
+let lastSentCursorTime = 0;
+const CURSOR_EMIT_INTERVAL = 50; // ms, 控制鼠标坐标发送频率
+
 // --- 全局状态 ---
 let currentRoomId = null;
 let isHost = false;
@@ -335,6 +347,118 @@ function addChatMessage(senderName, message, type) {
   currentChatDisplay.scrollTop = currentChatDisplay.scrollHeight;
 }
 
+
+// --- 新增：鼠标移动事件监听器 (在 game-active 屏幕上) ---
+// 仅在游戏激活屏幕上监听鼠标移动，并进行节流
+gameActiveScreen.addEventListener('mousemove', (event) => {
+  // 鼠标坐标相对于视口
+  const clientX = event.clientX;
+  const clientY = event.clientY;
+
+  // 获取 gameActiveScreen 的边界矩形
+  const rect = gameActiveScreen.getBoundingClientRect();
+
+  // 计算鼠标相对于 gameActiveScreen 容器的偏移量
+  // 确保坐标在容器内，并将其转换为百分比或直接使用像素值
+  // 使用像素值通常更简单，但在响应式布局中可能需要调整
+  const offsetX = clientX - rect.left;
+  const offsetY = clientY - rect.top;
+
+  // 确保坐标在容器范围内
+  const relativeX = Math.max(0, Math.min(offsetX, rect.width));
+  const relativeY = Math.max(0, Math.min(offsetY, rect.height));
+
+  // 使用 requestAnimationFrame 节流，确保平滑更新
+  if (mouseMoveAnimationFrameRequest === null) {
+      mouseMoveAnimationFrameRequest = requestAnimationFrame(() => {
+          mouseMoveAnimationFrameRequest = null;
+          // 只有当鼠标实际移动且达到发送间隔时才发送
+          if (Date.now() - lastSentCursorTime > CURSOR_EMIT_INTERVAL || relativeX !== lastMouseX || relativeY !== lastMouseY) {
+              lastMouseX = relativeX;
+              lastMouseY = relativeY;
+              socket.emit('cursorMove', { x: relativeX, y: relativeY });
+              lastSentCursorTime = Date.now();
+          }
+      });
+  }
+});
+
+/**
+ * 生成一个随机的十六进制颜色
+ * @returns {string} 例如 '#RRGGBB'
+ */
+function getRandomColor() {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
+/**
+* 更新或创建玩家光标元素。
+* @param {string} playerId - 玩家的 Socket ID。
+* @param {string} playerName - 玩家的昵称。
+* @param {number} x - 鼠标的 X 坐标 (相对于容器)。
+* @param {number} y - 鼠标的 Y 坐标 (相对于容器)。
+*/
+function updatePlayerCursor(playerId, playerName, x, y) {
+  let cursorElem = playerCursorElements.get(playerId);
+  let playerColor = playerColors.get(playerId);
+
+  if (!playerColor) {
+      playerColor = getRandomColor();
+      playerColors.set(playerId, playerColor);
+  }
+
+  if (!cursorElem) {
+      // 如果光标元素不存在，则创建它
+      cursorElem = document.createElement('div');
+      cursorElem.classList.add('player-cursor');
+      cursorElem.dataset.playerId = playerId; // 存储 ID
+
+      const icon = document.createElement('span');
+      icon.classList.add('cursor-icon');
+      icon.style.color = playerColor; // 设置图标颜色
+      cursorElem.appendChild(icon);
+
+      const name = document.createElement('span');
+      name.classList.add('cursor-name');
+      name.textContent = playerName;
+      name.style.backgroundColor = playerColor; // 设置昵称背景颜色
+      cursorElem.appendChild(name);
+
+      playerCursorsContainer.appendChild(cursorElem);
+      playerCursorElements.set(playerId, cursorElem);
+  }
+
+  // 更新光标位置
+  cursorElem.style.left = `${x}px`;
+  cursorElem.style.top = `${y}px`;
+  // 移除离开动画类
+  cursorElem.classList.remove('leaving');
+}
+
+/**
+* 移除已断开连接的玩家光标。
+* @param {string} playerId - 要移除的玩家 Socket ID。
+*/
+function removePlayerCursor(playerId) {
+  const cursorElem = playerCursorElements.get(playerId);
+  if (cursorElem) {
+      // 可以添加一个短暂的动画效果，让光标平滑消失
+      cursorElem.classList.add('leaving');
+      setTimeout(() => {
+          if (cursorElem.parentNode) { // 确保元素仍在DOM中，避免重复移除
+              cursorElem.parentNode.removeChild(cursorElem);
+          }
+          playerCursorElements.delete(playerId);
+          playerColors.delete(playerId); // 移除颜色记录
+      }, 500); // 动画持续时间
+  }
+}
+
 /**
  * 从服务器获取并显示题目列表。
  */
@@ -514,43 +638,49 @@ socket.on("roomJoined", (data) => {
   lobbyMessage.textContent = isHost ? "너가방장임" : "방장을 기둘리셈...";
 });
 
-// 更新当前房间中的玩家列表
-socket.on("updatePlayers", (players) => {
-  if (!currentRoomId) return; // 确保玩家在房间中
+// 当有玩家离开房间时，server.js 会发送 updatePlayers，
+// 但为了更即时的光标清理，服务器端可以在玩家离开时发送一个特定事件，
+// 或者依赖 disconnect 事件来清理。
+// 我们可以修改 updatePlayers，如果某个玩家不再列表里，就清理其光标。
+socket.on('updatePlayers', (players) => {
+  if (!currentRoomId) return;
 
-  playersList.innerHTML = ""; // 清空当前玩家列表
+  // 清理那些已不在玩家列表中的光标
+  playerCursorElements.forEach((elem, id) => {
+      if (!players[id] && id !== socket.id) { // 如果不在列表中且不是自己
+          removePlayerCursor(id);
+      }
+  });
+
+  playersList.innerHTML = '';
   const playerIds = Object.keys(players);
 
   if (playerIds.length === 0) {
-    playersList.innerHTML = "<li>방에 플레이어가 없음</li>";
-    startGameBtn.disabled = true; // 没有玩家不能开始游戏
-    return;
+      playersList.innerHTML = '<li>房间内没有玩家。</li>';
+      startGameBtn.disabled = true;
+      return;
   }
 
-  playerIds.forEach((id) => {
-    const player = players[id];
-    const li = document.createElement("li");
-    li.textContent = `${player.name}: ${player.score} 分`;
-    if (id === socket.id) {
-      li.style.fontWeight = "bold";
-      li.style.backgroundColor = "#dff0d8"; // 突出显示当前玩家
-    }
-    // 主机显示简单的启发式：如果我是主机，就突出显示我。否则，突出显示列表中的第一个玩家。
-    // 为了更强大的主机显示，服务器应该在 updatePlayers 中发送 hostId。
-    if (isHost && id === socket.id) {
-      // 如果当前玩家是主机
-      li.classList.add("player-list-host");
-    } else if (!isHost && playerIds[0] === id) {
-      // 如果当前玩家不是主机，则假定列表中的第一个玩家是主机
-      li.classList.add("player-list-host");
-    }
-    playersList.appendChild(li);
+  playerIds.forEach(id => {
+      const player = players[id];
+      const li = document.createElement('li');
+      li.textContent = `${player.name}: ${player.score} 分`;
+      if (id === socket.id) {
+          li.style.fontWeight = 'bold';
+          li.style.backgroundColor = '#dff0d8';
+      }
+      if (isHost && id === socket.id) {
+          li.classList.add('player-list-host');
+      } else if (!isHost && playerIds[0] === id) {
+           li.classList.add('player-list-host');
+      }
+      playersList.appendChild(li);
   });
 
   if (isHost) {
-    startGameBtn.disabled = playerIds.length < 1; // 主机可以开始，如果至少有 1 个玩家（包括自己）
+      startGameBtn.disabled = playerIds.length < 1;
   } else {
-    startGameBtn.disabled = true; // 非主机不能开始
+      startGameBtn.disabled = true;
   }
 });
 
@@ -564,6 +694,19 @@ socket.on("gameStart", () => {
   answerExplanationDisplay.textContent = "";
   answerExplanationDisplay.classList.remove("show");
 });
+
+// --- 新增：Socket.IO 鼠标光标监听器 ---
+socket.on('cursorUpdate', (cursorData) => {
+  // cursorData 包含 { playerId, playerName, x, y }
+  // 不显示自己的光标，因为本地鼠标已经可见
+  if (cursorData.playerId !== socket.id) {
+      updatePlayerCursor(cursorData.playerId, cursorData.playerName, cursorData.x, cursorData.y);
+  }
+});
+
+// 在 playerAnswered 事件中，可以短暂隐藏光标，或者让它保持可见。
+// 通常，在回答后光标会保持活跃。
+
 
 // 收到新题目时
 socket.on("newQuestion", (data) => {
@@ -704,13 +847,22 @@ socket.on("message", (msg) => {
     }
   }
 });
-// 与服务器断开连接时
-socket.on("disconnect", () => {
-  console.log("已与服务器断开连接");
-  currentRoomId = null; // 重置房间状态
+// 在 disconnect 事件中，移除玩家光标
+socket.on('disconnect', (reason) => {
+  console.log('已与服务器断开连接:', reason);
+  // 遍历所有已显示的光标，移除它们
+  playerCursorElements.forEach((elem, id) => {
+      removePlayerCursor(id); // 为所有光标添加离开动画并移除
+  });
+  // 清空 maps
+  playerCursorElements.clear();
+  playerColors.clear();
+
+  currentRoomId = null;
   isHost = false;
-  clearInterval(timerInterval); // 停止任何活动的计时器
-  roomMessage.textContent = "새로고침하셈 기술상 분마다 끊김";
-  showScreen("room-setup"); // 返回设置屏幕
+  clearInterval(timerInterval);
+  roomMessage.textContent = '你已断开连接，请刷新页面重新加入。';
+  showScreen('room-setup');
   disableRoomSetupControls(false);
 });
+

@@ -557,3 +557,56 @@ button.secondary-btn:hover {
 .chat-input-area button:hover {
   background-color: #0056b3;
 }
+
+/* 鼠标光标容器 - 确保它覆盖整个游戏区域 */
+.player-cursors-container {
+  position: absolute; /* 相对于父级定位，如果父级也是相对定位 */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* 允许鼠标事件穿透此层，不阻挡下方按钮和输入框 */
+  z-index: 10; /* 确保光标在其他元素之上，但不要太高，以免遮挡重要UI */
+  overflow: hidden; /* 防止光标在容器外显示 */
+}
+
+/* 单个玩家光标样式 */
+.player-cursor {
+  position: absolute;
+  transform: translate(-50%, -50%); /* 将光标的中心点定位在鼠标坐标处 */
+  pointer-events: none; /* 允许鼠标事件穿透此层 */
+  z-index: 11; /* 比容器高一点 */
+  transition: transform 0.05s linear; /* 平滑光标移动，根据实际效果调整速度 */
+  /* background-color: rgba(0, 0, 0, 0.2); /* 用于调试定位 */
+  /* border-radius: 50%; width: 20px; height: 20px; */
+}
+
+.player-cursor .cursor-icon {
+  width: 24px; /* 光标图标大小 */
+  height: 24px;
+  background-color: currentColor; /* 使用文字颜色作为背景色 */
+  mask: url('/cursor-arrow.svg') no-repeat center / contain; /* 使用SVG作为光标形状 */
+  -webkit-mask: url('/cursor-arrow.svg') no-repeat center / contain;
+  display: inline-block; /* 确保 mask 工作 */
+}
+
+.player-cursor .cursor-name {
+  margin-left: 8px; /* 昵称与光标图标的距离 */
+  padding: 2px 6px;
+  background-color: currentColor; /* 使用文字颜色作为背景色 */
+  color: white;
+  border-radius: 4px;
+  font-size: 0.8em;
+  white-space: nowrap; /* 确保昵称不换行 */
+  opacity: 0.9;
+  font-weight: bold;
+  display: inline-block;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* 可以添加一些动画效果 */
+.player-cursor.leaving {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.5);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
