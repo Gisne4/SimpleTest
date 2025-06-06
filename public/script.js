@@ -351,23 +351,37 @@ function addChatMessage(senderName, message, type) {
 // --- 新增：鼠标移动事件监听器 (在 game-active 屏幕上) ---
 // 仅在游戏激活屏幕上监听鼠标移动，并进行节流
 gameActiveScreen.addEventListener('mousemove', (event) => {
-  const clientX = event.clientX; // 相对于视口的X坐标
-  const clientY = event.clientY; // 相对于视口的Y坐标
+   // 获取鼠标的像素坐标 (相对于视口)
+   const clientX = event.clientX;
+   const clientY = event.clientY;
 
-  // 使用 requestAnimationFrame 节流，确保平滑更新
-  if (mouseMoveAnimationFrameRequest === null) {
-      mouseMoveAnimationFrameRequest = requestAnimationFrame(() => {
-          mouseMoveAnimationFrameRequest = null;
-          // 只有当鼠标实际移动且达到发送间隔时才发送
-          if (Date.now() - lastSentCursorTime > CURSOR_EMIT_INTERVAL || clientX !== lastMouseX || clientY !== lastMouseY) {
-              lastMouseX = clientX;
-              lastMouseY = clientY;
-              // 直接发送 clientX 和 clientY，因为 playerCursorsContainer 使用 fixed 定位并覆盖整个视口
-              socket.emit('cursorMove', { x: clientX, y: clientY });
-              lastSentCursorTime = Date.now();
-          }
-      });
-  }
+   // 获取当前视口的宽度和高度
+   const viewportWidth = window.innerWidth;
+   const viewportHeight = window.innerHeight;
+
+   // 将像素坐标转换为百分比 (0.0 到 1.0 之间)
+   const percentX = clientX / viewportWidth;
+   const percentY = clientY / viewportHeight;
+
+   // 使用 requestAnimationFrame 节流，确保平滑更新
+   if (mouseMoveAnimationFrameRequest === null) {
+       mouseMoveAnimationFrameRequest = requestAnimationFrame(() => {
+           mouseMoveAnimationFrameRequest = null;
+           // 只有当鼠标实际移动 (百分比位置改变) 且达到发送间隔时才发送
+           // 使用一个小的阈值来判断“移动”，避免浮点数精度问题导致频繁发送
+           const movementThreshold = 0.001; // 0.1% 的移动
+           if (Date.now() - lastSentCursorTime > CURSOR_EMIT_INTERVAL ||
+               Math.abs(percentX - lastMouseX) > movementThreshold ||
+               Math.abs(percentY - lastMouseY) > movementThreshold) {
+
+               lastMouseX = percentX;
+               lastMouseY = percentY;
+               // 发送百分比坐标
+               socket.emit('cursorMove', { x: percentX, y: percentY });
+               lastSentCursorTime = Date.now();
+           }
+       });
+   }
 });
 
 /**
@@ -384,13 +398,13 @@ function getRandomColor() {
 }
 
 /**
-* 更新或创建玩家光标元素。
-* @param {string} playerId - 玩家的 Socket ID。
-* @param {string} playerName - 玩家的昵称。
-* @param {number} x - 鼠标的 X 坐标 (相对于容器)。
-* @param {number} y - 鼠标的 Y 坐标 (相对于容器)。
-*/
-function updatePlayerCursor(playerId, playerName, x, y) {
+ * 更新或创建玩家光标元素。
+ * @param {string} playerId - 玩家的 Socket ID。
+ * @param {string} playerName - 玩家的昵称。
+ * @param {number} percentX - 鼠标的 X 坐标 (0.0 到 1.0 之间的百分比)。
+ * @param {number} percentY - 鼠标的 Y 坐标 (0.0 到 1.0 之间的百分比)。
+ */
+function updatePlayerCursor(playerId, playerName, percentX, percentY) {
   let cursorElem = playerCursorElements.get(playerId);
   let playerColor = playerColors.get(playerId);
 
@@ -400,32 +414,40 @@ function updatePlayerCursor(playerId, playerName, x, y) {
   }
 
   if (!cursorElem) {
-      // 如果光标元素不存在，则创建它
+      // 如果光标元素不存在，则创建它 (这部分和之前一样)
       cursorElem = document.createElement('div');
       cursorElem.classList.add('player-cursor');
-      cursorElem.dataset.playerId = playerId; // 存储 ID
+      cursorElem.dataset.playerId = playerId;
 
       const icon = document.createElement('span');
       icon.classList.add('cursor-icon');
-      icon.style.color = playerColor; // 设置图标颜色
+      icon.style.color = playerColor;
       cursorElem.appendChild(icon);
 
       const name = document.createElement('span');
       name.classList.add('cursor-name');
       name.textContent = playerName;
-      name.style.backgroundColor = playerColor; // 设置昵称背景颜色
+      name.style.backgroundColor = playerColor;
       cursorElem.appendChild(name);
 
       playerCursorsContainer.appendChild(cursorElem);
       playerCursorElements.set(playerId, cursorElem);
   }
 
+  // --- 核心修改：将百分比坐标转换为接收方视口的像素坐标 ---
+  const receiverViewportWidth = window.innerWidth;
+  const receiverViewportHeight = window.innerHeight;
+
+  const pixelX = percentX * receiverViewportWidth;
+  const pixelY = percentY * receiverViewportHeight;
+
   // 更新光标位置
-  cursorElem.style.left = `${x}px`;
-  cursorElem.style.top = `${y}px`;
+  cursorElem.style.left = `${pixelX}px`;
+  cursorElem.style.top = `${pixelY}px`;
   // 移除离开动画类
   cursorElem.classList.remove('leaving');
 }
+
 
 /**
 * 移除已断开连接的玩家光标。
@@ -682,9 +704,10 @@ socket.on("gameStart", () => {
   answerExplanationDisplay.classList.remove("show");
 });
 
-// --- 新增：Socket.IO 鼠标光标监听器 ---
+// --- Socket.IO 鼠标光标监听器 (这里的 data.x 和 data.y 现在是百分比) ---
 socket.on('cursorUpdate', (cursorData) => {
   // cursorData 包含 { playerId, playerName, x, y }
+  // x 和 y 现在是百分比值 (0.0 - 1.0)
   // 不显示自己的光标，因为本地鼠标已经可见
   if (cursorData.playerId !== socket.id) {
       updatePlayerCursor(cursorData.playerId, cursorData.playerName, cursorData.x, cursorData.y);
