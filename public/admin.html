@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OX 问答游戏 - 题目管理</title>
+    <title>OX퀴즈 문제내기</title>
     <link rel="stylesheet" href="style.css" /> <style>
         /* Optional: Add specific styles for the admin page layout */
         body {
@@ -215,16 +215,16 @@
             const explanation = newQuestionExplanation.value.trim();
 
             if (!question || !answer) {
-                displayQuestionAdminMessage('问题和答案都不能为空！', 'error');
+                displayQuestionAdminMessage('아 제데로 하셈', 'error');
                 return;
             }
             if (answer !== 'O' && answer !== 'X') {
-                displayQuestionAdminMessage('答案必须是 O 或 X！', 'error');
+                displayQuestionAdminMessage('답은 O 나 X！', 'error');
                 return;
             }
 
             submitNewQuestionBtn.disabled = true;
-            questionAdminMessage.textContent = '正在添加题目...';
+            questionAdminMessage.textContent = '문제추가중...';
             questionAdminMessage.classList.remove('success', 'error');
             questionAdminMessage.classList.add('show');
 
@@ -240,17 +240,17 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    displayQuestionAdminMessage('题目添加成功！', 'success');
+                    displayQuestionAdminMessage('문제추가 성공', 'success');
                     newQuestionText.value = '';
                     newQuestionAnswer.value = '';
                     newQuestionExplanation.value = '';
                     fetchQuestions();
                 } else {
-                    displayQuestionAdminMessage(`添加失败: ${data.message || '未知错误'}`, 'error');
+                    displayQuestionAdminMessage(`실패: ${data.message || '잘모름'}`, 'error');
                 }
             } catch (error) {
-                console.error('添加题目失败:', error);
-                displayQuestionAdminMessage('网络或服务器错误，请重试。', 'error');
+                console.error('아놔:', error);
+                displayQuestionAdminMessage('다시한번 해보셈', 'error');
             } finally {
                 submitNewQuestionBtn.disabled = false;
             }
