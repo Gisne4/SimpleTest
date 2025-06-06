@@ -87,7 +87,7 @@ app.delete("/api/questions/:id", async (req, res) => {
 // --- Game Logic Variables ---
 const rooms = {}; // Stores active rooms { roomId: { hostId, players: {}, gameStarted, currentQuestionIndex, questions: [], questionTimer, lastActivity } }
 const MAX_PLAYERS_PER_ROOM = 8; // Max players per room
-const QUESTION_DURATION = 10; // Seconds for each question
+const QUESTION_DURATION = 20; // Seconds for each question
 const ROOM_CLEANUP_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const GAME_QUESTION_COUNT = 20; // 定义游戏问题数量为20
 
