@@ -11,7 +11,9 @@ const io = socketIo(server);
 // --- MongoDB Connection ---
 mongoose
   .connect(
-    "mongodb+srv://dkrkd010:EhWrxtpczNCmLfWa@krlee.slxnsqd.mongodb.net/?retryWrites=true&w=majority&appName=KRLEE"
+    "mongodb+srv://dkrkd010:EhWrxtpczNCmLfWa@krlee.slxnsqd.mongodb.net/?retryWrites=true&w=majority&appName=KRLEE", {
+      serverSelectionTimeoutMS: 30000 // Increase to 30 seconds
+    }
   )
   .then(() => console.log("MongoDB connected successfully"))
   .catch((err) => console.error("MongoDB connection error:", err));
