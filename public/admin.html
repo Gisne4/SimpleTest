@@ -1,367 +1,611 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OX퀴즈 문제내기</title>
-    <link rel="stylesheet" href="style.css" /> <style>
-        /* Optional: Add specific styles for the admin page layout */
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start; /* Align to top */
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-        }
+    <title>OX퀴즈 지식인 되기</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      /* Optional: Specific styles for the admin page layout */
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f2f5;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start; /* Align to top */
+        min-height: 100vh;
+        margin: 0;
+        padding: 20px;
+        box-sizing: border-box;
+      }
 
+      .admin-container {
+        background-color: #ffffff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 600px;
+      }
+
+      .admin-container h2 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 25px;
+        font-size: 1.8em;
+      }
+
+      .admin-section {
+        margin-bottom: 30px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        background-color: #fdfdfd;
+      }
+
+      .admin-section h3 {
+        margin-top: 0;
+        color: #555;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+      }
+
+      .admin-section input[type="text"],
+      .admin-section select {
+        width: calc(100% - 22px);
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 1em;
+      }
+
+      .admin-section button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1em;
+        transition: background-color 0.2s ease;
+        margin-right: 10px;
+      }
+
+      .admin-section button:hover {
+        background-color: #0056b3;
+      }
+
+      .admin-section button.secondary-btn {
+        background-color: #6c757d;
+      }
+
+      .admin-section button.secondary-btn:hover {
+        background-color: #5a6268;
+      }
+
+      /* Message display styles */
+      #questionAdminMessage,
+      #questionListMessage,
+      #editQuestionMessage {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 5px;
+        font-weight: bold;
+        display: none; /* Hidden by default, shown by JS */
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      #questionAdminMessage.show,
+      #questionListMessage.show,
+      #editQuestionMessage.show {
+        display: block;
+        opacity: 1;
+      }
+
+      #questionAdminMessage.success,
+      #questionListMessage.success,
+      #editQuestionMessage.success {
+        background-color: #d4edda;
+        color: #155724;
+        border-color: #c3e6cb;
+      }
+
+      #questionAdminMessage.error,
+      #questionListMessage.error,
+      #editQuestionMessage.error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border-color: #f5c6cb;
+      }
+
+      #currentQuestionsList {
+        list-style: none;
+        padding: 0;
+        margin-top: 15px;
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #eee;
+        border-radius: 5px;
+        background-color: #fdfdfd;
+      }
+
+      #currentQuestionsList li {
+        padding: 10px 15px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.95em;
+      }
+
+      #currentQuestionsList li:last-child {
+        border-bottom: none;
+      }
+
+      #currentQuestionsList li span {
+        flex-grow: 1;
+        margin-right: 10px;
+      }
+
+      #currentQuestionsList li div {
+        /* Container for buttons */
+        display: flex;
+        gap: 5px; /* Space between buttons */
+      }
+
+      /* Delete button style */
+      #currentQuestionsList li button.delete-question-btn {
+        background-color: #dc3545;
+        padding: 6px 12px;
+        font-size: 0.85em;
+      }
+
+      #currentQuestionsList li button.delete-question-btn:hover {
+        background-color: #c82333;
+      }
+
+      /* New: Edit button style */
+      .admin-section button.edit-question-btn {
+        background-color: #1890ff; /* Blue button for edit */
+        padding: 6px 12px;
+        font-size: 0.85em;
+      }
+
+      .admin-section button.edit-question-btn:hover {
+        background-color: #096dd9;
+      }
+
+      /* New: Edit Question Section specific styling */
+      #editQuestionSection {
+        background-color: #e6f7ff; /* Different background color for edit section */
+        border-color: #91d5ff;
+      }
+
+      #editQuestionSection h3 {
+        color: #1890ff;
+      }
+
+      #editQuestionSection.hidden {
+        display: none;
+      }
+
+      @media (max-width: 768px) {
         .admin-container {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 600px;
+          padding: 20px;
         }
-
-        .admin-container h2 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 25px;
-            font-size: 1.8em;
-        }
-
-        .admin-section {
-            margin-bottom: 30px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 20px;
-            background-color: #fdfdfd;
-        }
-
-        .admin-section h3 {
-            margin-top: 0;
-            color: #555;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-
         .admin-section input[type="text"],
-        .admin-section select {
-            width: calc(100% - 22px);
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 1em;
-        }
-
+        .admin-section select,
         .admin-section button {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: background-color 0.2s ease;
-            margin-right: 10px;
+          width: 100%;
+          margin-right: 0;
+          margin-bottom: 10px;
         }
-
-        .admin-section button:hover {
-            background-color: #0056b3;
-        }
-
-        .admin-section button.secondary-btn {
-            background-color: #6c757d;
-        }
-
-        .admin-section button.secondary-btn:hover {
-            background-color: #5a6268;
-        }
-
-        #questionAdminMessage,
-        #questionListMessage {
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 5px;
-            font-weight: bold;
-            display: none; /* Hidden by default, shown by JS */
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        #questionAdminMessage.show,
-        #questionListMessage.show {
-            display: block;
-            opacity: 1;
-        }
-
-        #questionAdminMessage.success,
-        #questionListMessage.success {
-            background-color: #d4edda;
-            color: #155724;
-            border-color: #c3e6cb;
-        }
-
-        #questionAdminMessage.error,
-        #questionListMessage.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border-color: #f5c6cb;
-        }
-
-        #currentQuestionsList {
-            list-style: none;
-            padding: 0;
-            margin-top: 15px;
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid #eee;
-            border-radius: 5px;
-            background-color: #fdfdfd;
-        }
-
         #currentQuestionsList li {
-            padding: 10px 15px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.95em;
+          flex-direction: column; /* Stack items on small screens */
+          align-items: flex-start;
         }
-
-        #currentQuestionsList li:last-child {
-            border-bottom: none;
-        }
-
         #currentQuestionsList li span {
-            flex-grow: 1;
-            margin-right: 10px;
+          margin-bottom: 5px;
         }
-
-        #currentQuestionsList li button.delete-question-btn {
-            background-color: #dc3545;
-            padding: 6px 12px;
-            font-size: 0.85em;
+        #currentQuestionsList li div {
+          width: 100%;
+          justify-content: flex-end; /* Push buttons to the right */
         }
-
-        #currentQuestionsList li button.delete-question-btn:hover {
-            background-color: #c82333;
-        }
-
-        @media (max-width: 768px) {
-            .admin-container {
-                padding: 20px;
-            }
-            .admin-section input[type="text"],
-            .admin-section select,
-            .admin-section button {
-                width: 100%;
-                margin-right: 0;
-                margin-bottom: 10px;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="admin-container">
-        <h2>문제내기</h2>
+      <h2>지식인 되기</h2>
 
-        <div class="admin-section">
-            <h3>문제추가</h3>
-            <input type="text" id="newQuestionText" placeholder="문제내용을 입력하세요" />
-            <select id="newQuestionAnswer">
-                <option value="">답을 고르세요</option>
-                <option value="O">O</option>
-                <option value="X">X</option>
-            </select>
-            <input type="text" id="newQuestionExplanation" placeholder="답의 설명 (꼽을 주세요)" />
-            <button id="submitNewQuestionBtn">문제 추가</button>
-            <p id="questionAdminMessage"></p>
-        </div>
+      <div class="admin-section">
+        <h3>지식인이 되어보자</h3>
+        <input type="text" id="newQuestionText" placeholder="문제를 내시오" />
+        <select id="newQuestionAnswer">
+          <option value="">정답</option>
+          <option value="O">O</option>
+          <option value="X">X</option>
+        </select>
+        <input type="text" id="newQuestionExplanation" placeholder="설명좀" />
+        <button id="submitNewQuestionBtn">문제추가</button>
+        <p id="questionAdminMessage"></p>
+      </div>
 
-        <div class="admin-section" style="display: none;">
-            <h3>문제보기</h3>
-            <button id="refreshQuestionsBtn" class="secondary-btn">문제 업데이트</button>
-            <ul id="currentQuestionsList">
-                <li>문제를 추가하는중...</li> </ul>
-            <p id="questionListMessage"></p>
-        </div>
+      <div class="admin-section" style="display: none">
+        <h3>阅览和删除题目</h3>
+        <button id="refreshQuestionsBtn" class="secondary-btn">
+          刷新题目列表
+        </button>
+        <ul id="currentQuestionsList">
+          <li>正在加载题目...</li>
+        </ul>
+        <p id="questionListMessage"></p>
+      </div>
+
+      <div id="editQuestionSection" class="admin-section hidden">
+        <h3>编辑题目</h3>
+        <input type="hidden" id="editQuestionId" />
+        <input type="text" id="editQuestionText" placeholder="编辑问题内容" />
+        <select id="editQuestionAnswer">
+          <option value="">选择答案</option>
+          <option value="O">O</option>
+          <option value="X">X</option>
+        </select>
+        <input
+          type="text"
+          id="editQuestionExplanation"
+          placeholder="编辑答案说明 (可选)"
+        />
+        <button id="updateQuestionBtn">更新题目</button>
+        <button id="cancelEditBtn" class="secondary-btn">取消</button>
+        <p id="editQuestionMessage"></p>
+      </div>
     </div>
 
     <script>
-        // --- 屏幕元素 ---
-        const newQuestionText = document.getElementById('newQuestionText');
-        const newQuestionAnswer = document.getElementById('newQuestionAnswer');
-        const newQuestionExplanation = document.getElementById('newQuestionExplanation');
-        const submitNewQuestionBtn = document.getElementById('submitNewQuestionBtn');
-        const questionAdminMessage = document.getElementById('questionAdminMessage');
+      // --- Screen elements ---
+      const newQuestionText = document.getElementById("newQuestionText");
+      const newQuestionAnswer = document.getElementById("newQuestionAnswer");
+      const newQuestionExplanation = document.getElementById(
+        "newQuestionExplanation"
+      );
+      const submitNewQuestionBtn = document.getElementById(
+        "submitNewQuestionBtn"
+      );
+      const questionAdminMessage = document.getElementById(
+        "questionAdminMessage"
+      );
 
-        const refreshQuestionsBtn = document.getElementById('refreshQuestionsBtn');
-        const currentQuestionsList = document.getElementById('currentQuestionsList');
-        const questionListMessage = document.getElementById('questionListMessage');
+      const refreshQuestionsBtn = document.getElementById(
+        "refreshQuestionsBtn"
+      );
+      const currentQuestionsList = document.getElementById(
+        "currentQuestionsList"
+      );
+      const questionListMessage = document.getElementById(
+        "questionListMessage"
+      );
 
-        // --- 事件监听器 ---
+      // New: Edit question section elements
+      const editQuestionSection = document.getElementById(
+        "editQuestionSection"
+      );
+      const editQuestionId = document.getElementById("editQuestionId");
+      const editQuestionText = document.getElementById("editQuestionText");
+      const editQuestionAnswer = document.getElementById("editQuestionAnswer");
+      const editQuestionExplanation = document.getElementById(
+        "editQuestionExplanation"
+      );
+      const updateQuestionBtn = document.getElementById("updateQuestionBtn");
+      const cancelEditBtn = document.getElementById("cancelEditBtn");
+      const editQuestionMessage = document.getElementById(
+        "editQuestionMessage"
+      );
 
-        // 提交新题目按钮
-        submitNewQuestionBtn.addEventListener('click', async () => {
-            const question = newQuestionText.value.trim();
-            const answer = newQuestionAnswer.value;
-            const explanation = newQuestionExplanation.value.trim();
+      // Cache for question list data
+      let questionsCache = [];
 
-            if (!question || !answer) {
-                displayQuestionAdminMessage('아 제데로 하셈', 'error');
-                return;
-            }
-            if (answer !== 'O' && answer !== 'X') {
-                displayQuestionAdminMessage('답은 O 나 X！', 'error');
-                return;
-            }
+      // --- Event Listeners ---
 
-            submitNewQuestionBtn.disabled = true;
-            questionAdminMessage.textContent = '문제추가중...';
-            questionAdminMessage.classList.remove('success', 'error');
-            questionAdminMessage.classList.add('show');
+      // Submit New Question button
+      submitNewQuestionBtn.addEventListener("click", async () => {
+        const question = newQuestionText.value.trim();
+        const answer = newQuestionAnswer.value;
+        const explanation = newQuestionExplanation.value.trim();
 
-            try {
-                const response = await fetch('/api/questions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ question, answer, explanation })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    displayQuestionAdminMessage('문제추가 성공', 'success');
-                    newQuestionText.value = '';
-                    newQuestionAnswer.value = '';
-                    newQuestionExplanation.value = '';
-                    fetchQuestions();
-                } else {
-                    displayQuestionAdminMessage(`실패: ${data.message || '잘모름'}`, 'error');
-                }
-            } catch (error) {
-                console.error('아놔:', error);
-                displayQuestionAdminMessage('다시한번 해보셈', 'error');
-            } finally {
-                submitNewQuestionBtn.disabled = false;
-            }
-        });
-
-        // 刷新题目列表按钮
-        refreshQuestionsBtn.addEventListener('click', fetchQuestions);
-
-        // 删除题目（列表的事件委托）
-        currentQuestionsList.addEventListener('click', async (event) => {
-            const deleteBtn = event.target.closest('.delete-question-btn');
-            if (deleteBtn) {
-                const questionId = deleteBtn.dataset.questionId;
-                if (!confirm('确定要删除这道题目吗？')) {
-                    return;
-                }
-
-                displayQuestionListMessage('正在删除题目...', '');
-                try {
-                    const response = await fetch(`/api/questions/${questionId}`, {
-                        method: 'DELETE'
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok) {
-                        displayQuestionListMessage('题目删除成功！', 'success');
-                        fetchQuestions();
-                    } else {
-                        displayQuestionListMessage(`删除失败: ${data.message || '未知错误'}`, 'error');
-                    }
-                } catch (error) {
-                    console.error('删除题目失败:', error);
-                    displayQuestionListMessage('网络或服务器错误，请重试。', 'error');
-                }
-            }
-        });
-
-        /**
-         * 在题目管理区域显示消息并应用样式。
-         * @param {string} message - 要显示的消息。
-         * @param {'success'|'error'|''} type - 消息类型（用于样式）。
-         */
-        function displayQuestionAdminMessage(message, type) {
-            questionAdminMessage.textContent = message;
-            questionAdminMessage.classList.remove('success', 'error');
-            if (type) {
-                questionAdminMessage.classList.add(type);
-            }
-            questionAdminMessage.classList.add('show');
-            setTimeout(() => {
-                questionAdminMessage.classList.remove('show');
-                setTimeout(() => questionAdminMessage.textContent = '', 500);
-            }, 3000);
+        if (!question || !answer) {
+          displayQuestionAdminMessage("님아 뭐라도 적으셈", "error");
+          return;
+        }
+        if (answer !== "O" && answer !== "X") {
+          displayQuestionAdminMessage("답은 O 나 X！", "error");
+          return;
         }
 
-        /**
-         * 在题目列表区域显示消息并应用样式。
-         * @param {string} message - 要显示的消息。
-         * @param {'success'|'error'|''} type - 消息类型（用于样式）。
-         */
-        function displayQuestionListMessage(message, type) {
-            questionListMessage.textContent = message;
-            questionListMessage.classList.remove('success', 'error');
-            if (type) {
-                questionListMessage.classList.add(type);
+        submitNewQuestionBtn.disabled = true;
+        questionAdminMessage.textContent = "문제 추가중...";
+        questionAdminMessage.classList.remove("success", "error");
+        questionAdminMessage.classList.add("show");
+
+        try {
+          const response = await fetch("/api/questions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ question, answer, explanation }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            displayQuestionAdminMessage("님은이제 지식인임", "success");
+            newQuestionText.value = "";
+            newQuestionAnswer.value = "";
+            newQuestionExplanation.value = "";
+            fetchQuestions(); // Refresh question list after adding
+          } else {
+            displayQuestionAdminMessage(
+              `실패: ${data.message || "알아보겠음"}`,
+              "error"
+            );
+          }
+        } catch (error) {
+          console.error("실패:", error);
+          displayQuestionAdminMessage("인터넷 터진거임", "error");
+        } finally {
+          submitNewQuestionBtn.disabled = false;
+        }
+      });
+
+      // Refresh Questions List button
+      refreshQuestionsBtn.addEventListener("click", fetchQuestions);
+
+      // Event delegation for Delete and Edit buttons on the question list
+      currentQuestionsList.addEventListener("click", async (event) => {
+        const deleteBtn = event.target.closest(".delete-question-btn");
+        const editBtn = event.target.closest(".edit-question-btn");
+
+        // Handle Delete button click
+        if (deleteBtn) {
+          const questionId = deleteBtn.dataset.questionId;
+          if (!confirm("确定要删除这道题目吗？")) {
+            return;
+          }
+
+          displayQuestionListMessage("正在删除题目...", "");
+          try {
+            const response = await fetch(`/api/questions/${questionId}`, {
+              method: "DELETE",
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+              displayQuestionListMessage("题目删除成功！", "success");
+              fetchQuestions(); // Refresh question list after deleting
+            } else {
+              displayQuestionListMessage(
+                `删除失败: ${data.message || "未知错误"}`,
+                "error"
+              );
             }
-            questionListMessage.classList.add('show');
-            setTimeout(() => {
-                questionListMessage.classList.remove('show');
-                setTimeout(() => questionListMessage.textContent = '', 500);
-            }, 3000);
+          } catch (error) {
+            console.error("删除题目失败:", error);
+            displayQuestionListMessage("网络或服务器错误，请重试。", "error");
+          }
+        }
+        // Handle Edit button click
+        else if (editBtn) {
+          const questionId = editBtn.dataset.questionId;
+          // Find the question data from the cached list
+          const questionToEdit = questionsCache.find(
+            (q) => q._id === questionId
+          );
+          if (questionToEdit) {
+            fillEditForm(questionToEdit);
+          } else {
+            displayQuestionListMessage("未能找到题目数据进行编辑。", "error");
+          }
+        }
+      });
+
+      // Update Question button (for the edit section)
+      updateQuestionBtn.addEventListener("click", async () => {
+        const id = editQuestionId.value;
+        const question = editQuestionText.value.trim();
+        const answer = editQuestionAnswer.value;
+        const explanation = editQuestionExplanation.value.trim();
+
+        if (!id || !question || !answer) {
+          displayEditQuestionMessage(
+            "问题ID、问题内容和答案都不能为空！",
+            "error"
+          );
+          return;
+        }
+        if (answer !== "O" && answer !== "X") {
+          displayEditQuestionMessage("答案必须是 O 或 X！", "error");
+          return;
         }
 
-        /**
-         * 从服务器获取并显示题目列表。
-         */
-        async function fetchQuestions() {
-            currentQuestionsList.innerHTML = '<li>正在加载题目...</li>';
-            questionListMessage.textContent = '';
-            questionListMessage.classList.remove('success', 'error');
+        updateQuestionBtn.disabled = true;
+        editQuestionMessage.textContent = "正在更新题目...";
+        editQuestionMessage.classList.remove("success", "error");
+        editQuestionMessage.classList.add("show");
 
-            try {
-                const response = await fetch('/api/questions');
-                const questions = await response.json();
+        try {
+          const response = await fetch(`/api/questions/${id}`, {
+            method: "PUT", // Use PUT request for updates
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ question, answer, explanation }),
+          });
 
-                currentQuestionsList.innerHTML = '';
+          const data = await response.json();
 
-                if (questions.length === 0) {
-                    currentQuestionsList.innerHTML = '<li>暂无题目，请添加新题目。</li>';
-                } else {
-                    questions.forEach(q => {
-                        const li = document.createElement('li');
-                        const explanationText = q.explanation ? `<br><small style="color: #888;">说明: ${q.explanation}</small>` : '';
-                        li.innerHTML = `
+          if (response.ok) {
+            displayEditQuestionMessage("题目更新成功！", "success");
+            hideEditForm(); // Hide edit form after successful update
+            fetchQuestions(); // Refresh question list
+          } else {
+            displayEditQuestionMessage(
+              `更新失败: ${data.message || "未知错误"}`,
+              "error"
+            );
+          }
+        } catch (error) {
+          console.error("更新题目失败:", error);
+          displayEditQuestionMessage("网络或服务器错误，请重试。", "error");
+        } finally {
+          updateQuestionBtn.disabled = false;
+        }
+      });
+
+      // Cancel Edit button
+      cancelEditBtn.addEventListener("click", () => {
+        hideEditForm();
+      });
+
+      // --- Helper Functions ---
+
+      /**
+       * Displays a message in the Add Question section with specific styling.
+       * @param {string} message - The message to display.
+       * @param {'success'|'error'|''} type - The message type (for styling).
+       */
+      function displayQuestionAdminMessage(message, type) {
+        questionAdminMessage.textContent = message;
+        questionAdminMessage.classList.remove("success", "error");
+        if (type) {
+          questionAdminMessage.classList.add(type);
+        }
+        questionAdminMessage.classList.add("show");
+        setTimeout(() => {
+          questionAdminMessage.classList.remove("show");
+          setTimeout(() => (questionAdminMessage.textContent = ""), 500);
+        }, 3000);
+      }
+
+      /**
+       * Displays a message in the Question List section with specific styling.
+       * @param {string} message - The message to display.
+       * @param {'success'|'error'|''} type - The message type (for styling).
+       */
+      function displayQuestionListMessage(message, type) {
+        questionListMessage.textContent = message;
+        questionListMessage.classList.remove("success", "error");
+        if (type) {
+          questionListMessage.classList.add(type);
+        }
+        questionListMessage.classList.add("show");
+        setTimeout(() => {
+          questionListMessage.classList.remove("show");
+          setTimeout(() => (questionListMessage.textContent = ""), 500);
+        }, 3000);
+      }
+
+      /**
+       * Displays a message in the Edit Question section with specific styling.
+       * @param {string} message - The message to display.
+       * @param {'success'|'error'|''} type - The message type (for styling).
+       */
+      function displayEditQuestionMessage(message, type) {
+        editQuestionMessage.textContent = message;
+        editQuestionMessage.classList.remove("success", "error");
+        if (type) {
+          editQuestionMessage.classList.add(type);
+        }
+        editQuestionMessage.classList.add("show");
+        setTimeout(() => {
+          editQuestionMessage.classList.remove("show");
+          setTimeout(() => (editQuestionMessage.textContent = ""), 500);
+        }, 3000);
+      }
+
+      /**
+       * Fetches and displays the list of questions from the server.
+       * Caches the fetched question data for editing purposes.
+       */
+      async function fetchQuestions() {
+        currentQuestionsList.innerHTML = "<li>正在加载题目...</li>";
+        questionListMessage.textContent = "";
+        questionListMessage.classList.remove("success", "error");
+        hideEditForm(); // Hide edit form when refreshing the list
+
+        try {
+          const response = await fetch("/api/questions");
+          const questions = await response.json();
+
+          questionsCache = questions; // Cache the fetched question data
+
+          currentQuestionsList.innerHTML = "";
+
+          if (questions.length === 0) {
+            currentQuestionsList.innerHTML =
+              "<li>暂无题目，请添加新题目。</li>";
+          } else {
+            questions.forEach((q) => {
+              const li = document.createElement("li");
+              const explanationText = q.explanation
+                ? `<br><small style="color: #888;">说明: ${q.explanation}</small>`
+                : "";
+              li.innerHTML = `
                             <span>${q.question} (答案: ${q.answer})${explanationText}</span>
-                            <button class="delete-question-btn" data-question-id="${q._id}">删除</button>
+                            <div>
+                                <button class="edit-question-btn" data-question-id="${q._id}">编辑</button>
+                                <button class="delete-question-btn" data-question-id="${q._id}">删除</button>
+                            </div>
                         `;
-                        currentQuestionsList.appendChild(li);
-                    });
-                }
-                displayQuestionListMessage('题目列表已更新。', 'success');
-            } catch (error) {
-                console.error('获取题目失败:', error);
-                currentQuestionsList.innerHTML = '<li>加载题目失败。</li>';
-                displayQuestionListMessage('加载题目失败，请检查服务器。', 'error');
-            }
+              currentQuestionsList.appendChild(li);
+            });
+          }
+          displayQuestionListMessage("题目列表已更新。", "success");
+        } catch (error) {
+          console.error("获取题目失败:", error);
+          currentQuestionsList.innerHTML = "<li>加载题目失败。</li>";
+          displayQuestionListMessage("加载题目失败，请检查服务器。", "error");
         }
+      }
 
-        // 页面加载时自动获取题目列表
-        document.addEventListener('DOMContentLoaded', fetchQuestions);
+      /**
+       * Fills the edit form with data from the selected question and makes it visible.
+       * @param {Object} question - The question object to edit.
+       */
+      function fillEditForm(question) {
+        editQuestionId.value = question._id;
+        editQuestionText.value = question.question;
+        editQuestionAnswer.value = question.answer;
+        editQuestionExplanation.value = question.explanation || ""; // Use empty string if no explanation
+
+        editQuestionSection.classList.remove("hidden"); // Show the edit form
+        editQuestionMessage.textContent = ""; // Clear previous messages
+        editQuestionMessage.classList.remove("show", "success", "error");
+        window.scrollTo({
+          top: editQuestionSection.offsetTop - 50, // Scroll to the edit form area
+          behavior: "smooth",
+        });
+      }
+
+      /**
+       * Hides the edit form and resets its content.
+       */
+      function hideEditForm() {
+        editQuestionSection.classList.add("hidden");
+        editQuestionId.value = "";
+        editQuestionText.value = "";
+        editQuestionAnswer.value = "";
+        editQuestionExplanation.value = "";
+        editQuestionMessage.textContent = "";
+        editQuestionMessage.classList.remove("show", "success", "error");
+      }
+
+      // Automatically fetch question list when the page loads
+      document.addEventListener("DOMContentLoaded", fetchQuestions);
     </script>
-</body>
+  </body>
 </html>

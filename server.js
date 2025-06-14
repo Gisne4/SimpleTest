@@ -67,7 +67,43 @@ app.post("/api/questions", async (req, res) => {
       .json({ message: "Error adding question", error: error.message });
   }
 });
+// --- 新增：更新题目路由 (PUT) ---
+app.put("/api/questions/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { question, answer, explanation } = req.body;
 
+    if (!question || !answer) {
+      return res.status(400).json({ message: "问题和答案都不能为空。" });
+    }
+    if (answer !== "O" && answer !== "X") {
+      return res.status(400).json({ message: "答案必须是 O 或 X。" });
+    }
+
+    const updatedQuestion = await Question.findByIdAndUpdate(
+      id,
+      { question, answer, explanation },
+      { new: true, runValidators: true } // new: true 返回更新后的文档；runValidators: true 运行模式中定义的验证器
+    );
+
+    if (!updatedQuestion) {
+      return res.status(404).json({ message: "未找到该题目。" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "题目更新成功！", question: updatedQuestion });
+  } catch (error) {
+    console.error("更新题目失败:", error);
+    if (error.name === "CastError") {
+      // 检查是否是无效ID格式
+      return res.status(400).json({ message: "无效的题目ID格式。" });
+    }
+    res
+      .status(500)
+      .json({ message: "更新题目时发生错误。", error: error.message });
+  }
+});
 // DELETE a question by ID
 app.delete("/api/questions/:id", async (req, res) => {
   try {
@@ -259,51 +295,50 @@ io.on("connection", (socket) => {
   });
 
   // Host starts the game
-  socket.on('startGame', async () => {
+  socket.on("startGame", async () => {
     const roomId = socket.data.roomId;
     const room = rooms[roomId];
 
     if (!room || socket.id !== room.hostId || room.gameStarted) {
-        socket.emit('message', '只有房主才能开始游戏，或者游戏已开始！');
-        return;
+      socket.emit("message", "只有房主才能开始游戏，或者游戏已开始！");
+      return;
     }
 
     // Fetch questions from DB
     try {
-        const allQuestions = await Question.find({});
-        if (allQuestions.length === 0) {
-            socket.emit('message', '数据库中没有题目，请先添加一些题目！');
-            return;
-        }
+      const allQuestions = await Question.find({});
+      if (allQuestions.length === 0) {
+        socket.emit("message", "数据库中没有题目，请先添加一些题目！");
+        return;
+      }
 
-        // --- 核心修改：随机抽取20个问题 ---
-        // 1. 随机打乱所有题目
-        const shuffledQuestions = allQuestions.sort(() => 0.5 - Math.random());
+      // --- 核心修改：随机抽取20个问题 ---
+      // 1. 随机打乱所有题目
+      const shuffledQuestions = allQuestions.sort(() => 0.5 - Math.random());
 
-        // 2. 截取前 GAME_QUESTION_COUNT 个问题
-        //    如果总问题数不足 GAME_QUESTION_COUNT，则使用所有可用问题
-        room.questions = shuffledQuestions.slice(0, GAME_QUESTION_COUNT);
+      // 2. 截取前 GAME_QUESTION_COUNT 个问题
+      //    如果总问题数不足 GAME_QUESTION_COUNT，则使用所有可用问题
+      room.questions = shuffledQuestions.slice(0, GAME_QUESTION_COUNT);
 
-        if (room.questions.length === 0) {
-            socket.emit('message', '没有足够的题目来开始游戏。请添加更多题目！');
-            return;
-        }
-        // --- 核心修改结束 ---
+      if (room.questions.length === 0) {
+        socket.emit("message", "没有足够的题目来开始游戏。请添加更多题目！");
+        return;
+      }
+      // --- 核心修改结束 ---
 
+      room.currentQuestionIndex = 0;
+      room.gameStarted = true;
+      room.lastActivity = new Date();
 
-        room.currentQuestionIndex = 0;
-        room.gameStarted = true;
-        room.lastActivity = new Date();
-
-        io.to(roomId).emit('gameStart');
-        io.to(roomId).emit('message', '游戏开始！');
-        io.emit('updateRoomList', getAvailableRooms()); // Update room list (room now unavailable)
-        sendNextQuestion(roomId);
+      io.to(roomId).emit("gameStart");
+      io.to(roomId).emit("message", "游戏开始！");
+      io.emit("updateRoomList", getAvailableRooms()); // Update room list (room now unavailable)
+      sendNextQuestion(roomId);
     } catch (error) {
-        console.error('Error fetching questions for game:', error);
-        socket.emit('message', '启动游戏失败：无法加载题目。');
+      console.error("Error fetching questions for game:", error);
+      socket.emit("message", "启动游戏失败：无法加载题目。");
     }
-});
+  });
 
   // Send the next question to the room
   function sendNextQuestion(roomId) {
@@ -342,25 +377,25 @@ io.on("connection", (socket) => {
   }
 
   // --- 新增：鼠标光标移动处理 ---
-socket.on('cursorMove', (data) => {
-  const roomId = socket.data.roomId;
-  const room = rooms[roomId];
+  socket.on("cursorMove", (data) => {
+    const roomId = socket.data.roomId;
+    const room = rooms[roomId];
 
-  if (!room || !room.players[socket.id]) {
+    if (!room || !room.players[socket.id]) {
       return; // 玩家不在房间内
-  }
+    }
 
-  const playerName = room.players[socket.id].name;
+    const playerName = room.players[socket.id].name;
 
-  // 将光标数据广播给房间内的所有其他玩家
-  // 不发回给自己，因为自己的光标已经显示
-  socket.to(roomId).emit('cursorUpdate', {
+    // 将光标数据广播给房间内的所有其他玩家
+    // 不发回给自己，因为自己的光标已经显示
+    socket.to(roomId).emit("cursorUpdate", {
       playerId: socket.id,
       playerName: playerName,
       x: data.x,
-      y: data.y
+      y: data.y,
+    });
   });
-});
 
   // Player answers a question
   socket.on("answer", (answer) => {
